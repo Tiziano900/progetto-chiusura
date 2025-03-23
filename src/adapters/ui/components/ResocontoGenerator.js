@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 const ResocontoGenerator = ({ resocontoService }) => {
   const MAX_AGENTI = 5;
@@ -23,6 +23,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
 
   const [values, setValues] = useState(defaultValues);
   const [notification, setNotification] = useState("");
+  const [resocontoText, setResocontoText] = useState("");
   const updateTimeoutRef = useRef(null);
 
   // Carica i dati dal resoconto più recente se disponibile
@@ -97,19 +98,23 @@ const ResocontoGenerator = ({ resocontoService }) => {
     }));
   }, [values.agenti.length]);
 
-  const resoconto = resocontoService.creaResoconto({
-    ...values,
-    agente1: values.agenti[0] || createDefaultAgent(0),
-    agente2: values.agenti[1] || createDefaultAgent(1)
-  });
-  const resocontoText = resoconto.formattaResoconto();
-  const kmPercorsi = resoconto.calcolaKmPercorsi();
+  const generaResoconto = useCallback(() => {
+    const resoconto = resocontoService.creaResoconto({
+      ...values,
+      agente1: values.agenti[0] || createDefaultAgent(0),
+      agente2: values.agenti[1] || createDefaultAgent(1)
+    });
+    const nuovoTesto = resoconto.formattaResoconto();
+    setResocontoText(nuovoTesto);
+    return nuovoTesto;
+  }, [values, resocontoService]);
 
   const copyToClipboard = useCallback(() => {
-    navigator.clipboard.writeText(resocontoText);
-    setNotification("Testo copiato negli appunti!");
+    const testo = generaResoconto();
+    navigator.clipboard.writeText(testo);
+    setNotification("Testo generato e copiato negli appunti!");
     setTimeout(() => setNotification(""), 2000);
-  }, [resocontoText]);
+  }, [generaResoconto]);
 
   const salvaResoconto = useCallback(() => {
     resocontoService.salvaResoconto({
@@ -117,9 +122,19 @@ const ResocontoGenerator = ({ resocontoService }) => {
       agente1: values.agenti[0] || createDefaultAgent(0),
       agente2: values.agenti[1] || createDefaultAgent(1)
     });
+    generaResoconto(); // Aggiorna il testo dopo il salvataggio
     setNotification("Resoconto salvato con successo!");
     setTimeout(() => setNotification(""), 2000);
-  }, [resocontoService, values]);
+  }, [resocontoService, values, generaResoconto]);
+
+  const kmPercorsi = useMemo(() => {
+    const resoconto = resocontoService.creaResoconto({
+      ...values,
+      agente1: values.agenti[0] || createDefaultAgent(0),
+      agente2: values.agenti[1] || createDefaultAgent(1)
+    });
+    return resoconto.calcolaKmPercorsi();
+  }, [values, resocontoService]);
 
   const InputField = React.memo(({ label, field, value }) => {
     const inputRef = useRef(null);
@@ -242,7 +257,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
             onClick={copyToClipboard}
             className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"
           >
-            Copia negli appunti
+            Genera e Copia
           </button>
           <button 
             type="button"
