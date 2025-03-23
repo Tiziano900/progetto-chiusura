@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 const ResocontoGenerator = ({ resocontoService }) => {
   const MAX_AGENTI = 5;
@@ -24,6 +24,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
   const [values, setValues] = useState(defaultValues);
   const [notification, setNotification] = useState("");
   const [resocontoText, setResocontoText] = useState("");
+  const formRef = useRef(null);
 
   // Carica i dati dal resoconto più recente se disponibile
   useEffect(() => {
@@ -79,16 +80,41 @@ const ResocontoGenerator = ({ resocontoService }) => {
     }));
   }, [values.agenti.length]);
 
+  const raccogliValori = useCallback(() => {
+    const form = formRef.current;
+    if (!form) return values;
+
+    const nuoviValori = {
+      persone: form.querySelector('[name="persone"]').value || "00",
+      veicoli: form.querySelector('[name="veicoli"]').value || "00",
+      sanzioniCds: form.querySelector('[name="sanzioniCds"]').value || "00",
+      extraCds: form.querySelector('[name="extraCds"]').value || "00",
+      veicoloId: form.querySelector('[name="veicoloId"]').value || "A00",
+      kmIniziali: form.querySelector('[name="kmIniziali"]').value || "0",
+      kmFinali: form.querySelector('[name="kmFinali"]').value || "0",
+      agenti: values.agenti.map((_, index) => ({
+        matricola: form.querySelector(`[name="agente${index}_matricola"]`).value || "00",
+        radio: form.querySelector(`[name="agente${index}_radio"]`).value || "00",
+        palmare: form.querySelector(`[name="agente${index}_palmare"]`).value || "00",
+        bodycam: form.querySelector(`[name="agente${index}_bodycam"]`).value || "00000"
+      }))
+    };
+
+    setValues(nuoviValori);
+    return nuoviValori;
+  }, [values.agenti.length]);
+
   const generaResoconto = useCallback(() => {
+    const valoriAttuali = raccogliValori();
     const resoconto = resocontoService.creaResoconto({
-      ...values,
-      agente1: values.agenti[0] || createDefaultAgent(0),
-      agente2: values.agenti[1] || createDefaultAgent(1)
+      ...valoriAttuali,
+      agente1: valoriAttuali.agenti[0] || createDefaultAgent(0),
+      agente2: valoriAttuali.agenti[1] || createDefaultAgent(1)
     });
     const nuovoTesto = resoconto.formattaResoconto();
     setResocontoText(nuovoTesto);
     return nuovoTesto;
-  }, [values, resocontoService]);
+  }, [raccogliValori, resocontoService]);
 
   const copyToClipboard = useCallback(() => {
     const testo = generaResoconto();
@@ -98,15 +124,16 @@ const ResocontoGenerator = ({ resocontoService }) => {
   }, [generaResoconto]);
 
   const salvaResoconto = useCallback(() => {
+    const valoriAttuali = raccogliValori();
     resocontoService.salvaResoconto({
-      ...values,
-      agente1: values.agenti[0] || createDefaultAgent(0),
-      agente2: values.agenti[1] || createDefaultAgent(1)
+      ...valoriAttuali,
+      agente1: valoriAttuali.agenti[0] || createDefaultAgent(0),
+      agente2: valoriAttuali.agenti[1] || createDefaultAgent(1)
     });
-    generaResoconto(); // Aggiorna il testo dopo il salvataggio
+    generaResoconto();
     setNotification("Resoconto salvato con successo!");
     setTimeout(() => setNotification(""), 2000);
-  }, [resocontoService, values, generaResoconto]);
+  }, [raccogliValori, resocontoService, generaResoconto]);
 
   const kmPercorsi = useMemo(() => {
     const resoconto = resocontoService.creaResoconto({
@@ -117,16 +144,13 @@ const ResocontoGenerator = ({ resocontoService }) => {
     return resoconto.calcolaKmPercorsi();
   }, [values, resocontoService]);
 
-  const InputField = React.memo(({ label, field, value }) => (
+  const InputField = React.memo(({ label, field, defaultValue }) => (
     <div className="flex flex-col mb-2">
       <label className="text-sm text-gray-600 mb-1">{label}</label>
       <input
         type="text"
-        value={value}
-        onChange={(e) => setValues(prev => ({
-          ...prev,
-          [field]: e.target.value
-        }))}
+        name={field}
+        defaultValue={defaultValue}
         className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
@@ -136,14 +160,6 @@ const ResocontoGenerator = ({ resocontoService }) => {
     const agente = values.agenti[index];
     const isFirstOrSecond = index < 2;
     
-    const handleAgentChange = (field, value) => {
-      setValues(prev => {
-        const newAgenti = [...prev.agenti];
-        newAgenti[index] = { ...newAgenti[index], [field]: value };
-        return { ...prev, agenti: newAgenti };
-      });
-    };
-    
     return (
       <div className="border p-4 rounded-lg lg:col-span-2 relative">
         <div className="flex items-center justify-between mb-3">
@@ -151,8 +167,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <h3 className="font-bold">{`${index + 1}° Agente - Matr.`}</h3>
             <input
               type="text"
-              value={agente.matricola}
-              onChange={(e) => handleAgentChange('matricola', e.target.value)}
+              name={`agente${index}_matricola`}
+              defaultValue={agente.matricola}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -174,8 +190,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">RADIO</label>
             <input
               type="text"
-              value={agente.radio}
-              onChange={(e) => handleAgentChange('radio', e.target.value)}
+              name={`agente${index}_radio`}
+              defaultValue={agente.radio}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -183,8 +199,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">PALMARE</label>
             <input
               type="text"
-              value={agente.palmare}
-              onChange={(e) => handleAgentChange('palmare', e.target.value)}
+              name={`agente${index}_palmare`}
+              defaultValue={agente.palmare}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -192,8 +208,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">BODYCAM</label>
             <input
               type="text"
-              value={agente.bodycam}
-              onChange={(e) => handleAgentChange('bodycam', e.target.value)}
+              name={`agente${index}_bodycam`}
+              defaultValue={agente.bodycam}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -203,7 +219,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
   });
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <form ref={formRef} className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md" onSubmit={(e) => e.preventDefault()}>
       {notification && (
         <div className={`px-4 py-2 rounded mb-4 ${
           notification.includes("massimo") || notification.includes("primi due")
@@ -239,19 +255,19 @@ const ResocontoGenerator = ({ resocontoService }) => {
         <div className="border p-4 rounded-lg lg:col-span-4">
           <h3 className="font-bold mb-3">Dati Generali</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <InputField label="PERSONE" field="persone" value={values.persone} />
-            <InputField label="VEICOLI" field="veicoli" value={values.veicoli} />
-            <InputField label="SANZIONI_CDS" field="sanzioniCds" value={values.sanzioniCds} />
-            <InputField label="EXTRA_CDS" field="extraCds" value={values.extraCds} />
+            <InputField label="PERSONE" field="persone" defaultValue={values.persone} />
+            <InputField label="VEICOLI" field="veicoli" defaultValue={values.veicoli} />
+            <InputField label="SANZIONI_CDS" field="sanzioniCds" defaultValue={values.sanzioniCds} />
+            <InputField label="EXTRA_CDS" field="extraCds" defaultValue={values.extraCds} />
           </div>
         </div>
 
         <div className="border p-4 rounded-lg lg:col-span-4">
           <h3 className="font-bold mb-3">Dati Veicolo</h3>
           <div className="flex flex-wrap gap-2">
-            <InputField label="VEICOLO ID" field="veicoloId" value={values.veicoloId} />
-            <InputField label="KM_INIZIALI" field="kmIniziali" value={values.kmIniziali} />
-            <InputField label="KM_FINALI" field="kmFinali" value={values.kmFinali} />
+            <InputField label="VEICOLO ID" field="veicoloId" defaultValue={values.veicoloId} />
+            <InputField label="KM_INIZIALI" field="kmIniziali" defaultValue={values.kmIniziali} />
+            <InputField label="KM_FINALI" field="kmFinali" defaultValue={values.kmFinali} />
           </div>
           {kmPercorsi > 0 && (
             <div className="mt-3 bg-blue-50 p-2 rounded">
@@ -282,7 +298,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
           Aggiungi Agente {values.agenti.length >= MAX_AGENTI ? `(Max ${MAX_AGENTI})` : ""}
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 
