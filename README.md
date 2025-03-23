@@ -29,4 +29,4 @@ Il progetto è strutturato secondo l'architettura esagonale (o ports and adapter
 
 - React
 - TailwindCSS
-- Architettura esagonale (Hexagonal Architecture) 
+- Architettura esagonale (Hexagonal Architecture) # progetto-chiusura
