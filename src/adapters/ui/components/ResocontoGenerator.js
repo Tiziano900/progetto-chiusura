@@ -119,12 +119,9 @@ const ResocontoGenerator = ({ resocontoService }) => {
       <input
         type="text"
         value={value}
-        onChange={(e) => {
-          e.preventDefault();
-          handleChange(field, e.target.value);
-        }}
-        className="border rounded p-2 w-24"
-        key={`input-${field}`}
+        onChange={(e) => handleChange(field, e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+        className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
   );
@@ -141,20 +138,15 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.matricola}
-              onChange={(e) => {
-                e.preventDefault();
-                handleChange('matricola', e.target.value, index);
-              }}
-              className="border rounded p-2 w-24"
+              onChange={(e) => handleChange('matricola', e.target.value, index)}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           {!isFirstOrSecond && (
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                rimuoviAgente(index);
-              }}
+              onClick={() => rimuoviAgente(index)}
               className="text-red-500 hover:text-red-700"
               title="Rimuovi agente"
             >
@@ -170,11 +162,9 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.radio}
-              onChange={(e) => {
-                e.preventDefault();
-                handleChange('radio', e.target.value, index);
-              }}
-              className="border rounded p-2 w-24"
+              onChange={(e) => handleChange('radio', e.target.value, index)}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex flex-col mb-2">
@@ -182,11 +172,9 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.palmare}
-              onChange={(e) => {
-                e.preventDefault();
-                handleChange('palmare', e.target.value, index);
-              }}
-              className="border rounded p-2 w-24"
+              onChange={(e) => handleChange('palmare', e.target.value, index)}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="flex flex-col mb-2">
@@ -194,11 +182,9 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.bodycam}
-              onChange={(e) => {
-                e.preventDefault();
-                handleChange('bodycam', e.target.value, index);
-              }}
-              className="border rounded p-2 w-24"
+              onChange={(e) => handleChange('bodycam', e.target.value, index)}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
