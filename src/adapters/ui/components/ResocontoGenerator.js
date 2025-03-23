@@ -119,21 +119,16 @@ const ResocontoGenerator = ({ resocontoService }) => {
   const copyToClipboard = useCallback(() => {
     const testo = generaResoconto();
     navigator.clipboard.writeText(testo);
-    setNotification("Testo generato e copiato negli appunti!");
-    setTimeout(() => setNotification(""), 2000);
-  }, [generaResoconto]);
-
-  const salvaResoconto = useCallback(() => {
+    // Salva il resoconto automaticamente
     const valoriAttuali = raccogliValori();
     resocontoService.salvaResoconto({
       ...valoriAttuali,
       agente1: valoriAttuali.agenti[0] || createDefaultAgent(0),
       agente2: valoriAttuali.agenti[1] || createDefaultAgent(1)
     });
-    generaResoconto();
-    setNotification("Resoconto salvato con successo!");
+    setNotification("Testo generato, copiato e salvato!");
     setTimeout(() => setNotification(""), 2000);
-  }, [raccogliValori, resocontoService, generaResoconto]);
+  }, [generaResoconto, raccogliValori, resocontoService]);
 
   const kmPercorsi = useMemo(() => {
     const resoconto = resocontoService.creaResoconto({
@@ -241,13 +236,14 @@ const ResocontoGenerator = ({ resocontoService }) => {
           >
             Genera e Copia
           </button>
-          <button 
-            type="button"
-            onClick={salvaResoconto}
+          <a 
+            href="https://laspezia.verbatel.it/newtouch/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600"
           >
-            Salva resoconto
-          </button>
+            NewTouch
+          </a>
         </div>
       </div>
 
