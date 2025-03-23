@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 const ResocontoGenerator = ({ resocontoService }) => {
   const MAX_AGENTI = 5;
@@ -24,7 +24,6 @@ const ResocontoGenerator = ({ resocontoService }) => {
   const [values, setValues] = useState(defaultValues);
   const [notification, setNotification] = useState("");
   const [resocontoText, setResocontoText] = useState("");
-  const updateTimeoutRef = useRef(null);
 
   // Carica i dati dal resoconto più recente se disponibile
   useEffect(() => {
@@ -55,24 +54,6 @@ const ResocontoGenerator = ({ resocontoService }) => {
       });
     }
   }, [resocontoService]);
-
-  const handleChange = useCallback((field, value, agentIndex = null) => {
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-
-    updateTimeoutRef.current = setTimeout(() => {
-      setValues(prevValues => {
-        if (agentIndex !== null) {
-          const newAgenti = [...prevValues.agenti];
-          newAgenti[agentIndex] = { ...newAgenti[agentIndex], [field]: value };
-          return { ...prevValues, agenti: newAgenti };
-        } else {
-          return { ...prevValues, [field]: value };
-        }
-      });
-    }, 100);
-  }, []);
 
   const aggiungiAgente = useCallback(() => {
     if (values.agenti.length >= MAX_AGENTI) {
