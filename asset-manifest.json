@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/progetto-chiusura/static/css/main.3d709ad6.css",
+    "main.js": "/progetto-chiusura/static/js/main.56e5eb66.js",
+    "index.html": "/progetto-chiusura/index.html",
+    "main.3d709ad6.css.map": "/progetto-chiusura/static/css/main.3d709ad6.css.map",
+    "main.56e5eb66.js.map": "/progetto-chiusura/static/js/main.56e5eb66.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.3d709ad6.css",
+    "static/js/main.56e5eb66.js"
+  ]
+}
