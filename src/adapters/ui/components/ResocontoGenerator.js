@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const ResocontoGenerator = ({ resocontoService }) => {
   const MAX_AGENTI = 5;
@@ -23,6 +23,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
 
   const [values, setValues] = useState(defaultValues);
   const [notification, setNotification] = useState("");
+  const updateTimeoutRef = useRef(null);
 
   // Carica i dati dal resoconto più recente se disponibile
   useEffect(() => {
@@ -54,40 +55,47 @@ const ResocontoGenerator = ({ resocontoService }) => {
     }
   }, [resocontoService]);
 
-  const handleChange = (field, value, agentIndex = null) => {
-    if (agentIndex !== null) {
-      const newAgenti = [...values.agenti];
-      newAgenti[agentIndex] = { ...newAgenti[agentIndex], [field]: value };
-      setValues({ ...values, agenti: newAgenti });
-    } else {
-      setValues({ ...values, [field]: value });
+  const handleChange = useCallback((field, value, agentIndex = null) => {
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current);
     }
-  };
 
-  const aggiungiAgente = () => {
+    updateTimeoutRef.current = setTimeout(() => {
+      setValues(prevValues => {
+        if (agentIndex !== null) {
+          const newAgenti = [...prevValues.agenti];
+          newAgenti[agentIndex] = { ...newAgenti[agentIndex], [field]: value };
+          return { ...prevValues, agenti: newAgenti };
+        } else {
+          return { ...prevValues, [field]: value };
+        }
+      });
+    }, 100);
+  }, []);
+
+  const aggiungiAgente = useCallback(() => {
     if (values.agenti.length >= MAX_AGENTI) {
       setNotification("Numero massimo di agenti raggiunto!");
       setTimeout(() => setNotification(""), 2000);
       return;
     }
-    setValues({
-      ...values,
-      agenti: [...values.agenti, createDefaultAgent(values.agenti.length)]
-    });
-  };
+    setValues(prev => ({
+      ...prev,
+      agenti: [...prev.agenti, createDefaultAgent(prev.agenti.length)]
+    }));
+  }, [values.agenti.length]);
 
-  const rimuoviAgente = (index) => {
+  const rimuoviAgente = useCallback((index) => {
     if (values.agenti.length <= 2) {
       setNotification("Non è possibile rimuovere i primi due agenti!");
       setTimeout(() => setNotification(""), 2000);
       return;
     }
-    const newAgenti = values.agenti.filter((_, i) => i !== index);
-    setValues({
-      ...values,
-      agenti: newAgenti
-    });
-  };
+    setValues(prev => ({
+      ...prev,
+      agenti: prev.agenti.filter((_, i) => i !== index)
+    }));
+  }, [values.agenti.length]);
 
   const resoconto = resocontoService.creaResoconto({
     ...values,
@@ -97,13 +105,13 @@ const ResocontoGenerator = ({ resocontoService }) => {
   const resocontoText = resoconto.formattaResoconto();
   const kmPercorsi = resoconto.calcolaKmPercorsi();
 
-  const copyToClipboard = () => {
+  const copyToClipboard = useCallback(() => {
     navigator.clipboard.writeText(resocontoText);
     setNotification("Testo copiato negli appunti!");
     setTimeout(() => setNotification(""), 2000);
-  };
+  }, [resocontoText]);
 
-  const salvaResoconto = () => {
+  const salvaResoconto = useCallback(() => {
     resocontoService.salvaResoconto({
       ...values,
       agente1: values.agenti[0] || createDefaultAgent(0),
@@ -111,24 +119,49 @@ const ResocontoGenerator = ({ resocontoService }) => {
     });
     setNotification("Resoconto salvato con successo!");
     setTimeout(() => setNotification(""), 2000);
-  };
+  }, [resocontoService, values]);
 
-  const InputField = ({ label, field, value }) => (
-    <div className="flex flex-col mb-2">
-      <label className="text-sm text-gray-600 mb-1">{label}</label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => handleChange(field, e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
-        className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-    </div>
-  );
+  const InputField = React.memo(({ label, field, value }) => {
+    const inputRef = useRef(null);
+    const [localValue, setLocalValue] = useState(value);
 
-  const AgentField = ({ index }) => {
+    useEffect(() => {
+      setLocalValue(value);
+    }, [value]);
+
+    const onChangeHandler = (e) => {
+      const newValue = e.target.value;
+      setLocalValue(newValue);
+      handleChange(field, newValue);
+    };
+
+    return (
+      <div className="flex flex-col mb-2">
+        <label className="text-sm text-gray-600 mb-1">{label}</label>
+        <input
+          ref={inputRef}
+          type="text"
+          value={localValue}
+          onChange={onChangeHandler}
+          className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+    );
+  });
+
+  const AgentField = React.memo(({ index }) => {
     const agente = values.agenti[index];
     const isFirstOrSecond = index < 2;
+    const [localValues, setLocalValues] = useState(agente);
+
+    useEffect(() => {
+      setLocalValues(agente);
+    }, [agente]);
+
+    const onChangeHandler = (field, value) => {
+      setLocalValues(prev => ({ ...prev, [field]: value }));
+      handleChange(field, value, index);
+    };
     
     return (
       <div className="border p-4 rounded-lg lg:col-span-2 relative">
@@ -137,9 +170,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <h3 className="font-bold">{`${index + 1}° Agente - Matr.`}</h3>
             <input
               type="text"
-              value={agente.matricola}
-              onChange={(e) => handleChange('matricola', e.target.value, index)}
-              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              value={localValues.matricola}
+              onChange={(e) => onChangeHandler('matricola', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -161,9 +193,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">RADIO</label>
             <input
               type="text"
-              value={agente.radio}
-              onChange={(e) => handleChange('radio', e.target.value, index)}
-              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              value={localValues.radio}
+              onChange={(e) => onChangeHandler('radio', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -171,9 +202,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">PALMARE</label>
             <input
               type="text"
-              value={agente.palmare}
-              onChange={(e) => handleChange('palmare', e.target.value, index)}
-              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              value={localValues.palmare}
+              onChange={(e) => onChangeHandler('palmare', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -181,19 +211,18 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">BODYCAM</label>
             <input
               type="text"
-              value={agente.bodycam}
-              onChange={(e) => handleChange('bodycam', e.target.value, index)}
-              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              value={localValues.bodycam}
+              onChange={(e) => onChangeHandler('bodycam', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
       </div>
     );
-  };
+  });
 
   return (
-    <form onSubmit={(e) => e.preventDefault()} className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
       {notification && (
         <div className={`px-4 py-2 rounded mb-4 ${
           notification.includes("massimo") || notification.includes("primi due")
@@ -209,12 +238,14 @@ const ResocontoGenerator = ({ resocontoService }) => {
         <p className="font-mono text-sm break-words">{resocontoText}</p>
         <div className="flex gap-2 mt-3">
           <button 
+            type="button"
             onClick={copyToClipboard}
             className="bg-blue-500 text-white py-1 px-3 rounded hover:bg-blue-600"
           >
             Copia negli appunti
           </button>
           <button 
+            type="button"
             onClick={salvaResoconto}
             className="bg-green-500 text-white py-1 px-3 rounded hover:bg-green-600"
           >
@@ -255,6 +286,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
 
       <div className="mt-6 flex justify-center">
         <button
+          type="button"
           onClick={aggiungiAgente}
           disabled={values.agenti.length >= MAX_AGENTI}
           className={`py-2 px-4 rounded flex items-center gap-2 ${
@@ -269,7 +301,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
           Aggiungi Agente {values.agenti.length >= MAX_AGENTI ? `(Max ${MAX_AGENTI})` : ""}
         </button>
       </div>
-    </form>
+    </div>
   );
 };
 
