@@ -136,46 +136,31 @@ const ResocontoGenerator = ({ resocontoService }) => {
     return resoconto.calcolaKmPercorsi();
   }, [values, resocontoService]);
 
-  const InputField = React.memo(({ label, field, value }) => {
-    const inputRef = useRef(null);
-    const [localValue, setLocalValue] = useState(value);
-
-    useEffect(() => {
-      setLocalValue(value);
-    }, [value]);
-
-    const onChangeHandler = (e) => {
-      const newValue = e.target.value;
-      setLocalValue(newValue);
-      handleChange(field, newValue);
-    };
-
-    return (
-      <div className="flex flex-col mb-2">
-        <label className="text-sm text-gray-600 mb-1">{label}</label>
-        <input
-          ref={inputRef}
-          type="text"
-          value={localValue}
-          onChange={onChangeHandler}
-          className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-    );
-  });
+  const InputField = React.memo(({ label, field, value }) => (
+    <div className="flex flex-col mb-2">
+      <label className="text-sm text-gray-600 mb-1">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValues(prev => ({
+          ...prev,
+          [field]: e.target.value
+        }))}
+        className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+    </div>
+  ));
 
   const AgentField = React.memo(({ index }) => {
     const agente = values.agenti[index];
     const isFirstOrSecond = index < 2;
-    const [localValues, setLocalValues] = useState(agente);
-
-    useEffect(() => {
-      setLocalValues(agente);
-    }, [agente]);
-
-    const onChangeHandler = (field, value) => {
-      setLocalValues(prev => ({ ...prev, [field]: value }));
-      handleChange(field, value, index);
+    
+    const handleAgentChange = (field, value) => {
+      setValues(prev => {
+        const newAgenti = [...prev.agenti];
+        newAgenti[index] = { ...newAgenti[index], [field]: value };
+        return { ...prev, agenti: newAgenti };
+      });
     };
     
     return (
@@ -185,8 +170,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <h3 className="font-bold">{`${index + 1}° Agente - Matr.`}</h3>
             <input
               type="text"
-              value={localValues.matricola}
-              onChange={(e) => onChangeHandler('matricola', e.target.value)}
+              value={agente.matricola}
+              onChange={(e) => handleAgentChange('matricola', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -208,8 +193,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">RADIO</label>
             <input
               type="text"
-              value={localValues.radio}
-              onChange={(e) => onChangeHandler('radio', e.target.value)}
+              value={agente.radio}
+              onChange={(e) => handleAgentChange('radio', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -217,8 +202,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">PALMARE</label>
             <input
               type="text"
-              value={localValues.palmare}
-              onChange={(e) => onChangeHandler('palmare', e.target.value)}
+              value={agente.palmare}
+              onChange={(e) => handleAgentChange('palmare', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -226,8 +211,8 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <label className="text-sm text-gray-600 mb-1">BODYCAM</label>
             <input
               type="text"
-              value={localValues.bodycam}
-              onChange={(e) => onChangeHandler('bodycam', e.target.value)}
+              value={agente.bodycam}
+              onChange={(e) => handleAgentChange('bodycam', e.target.value)}
               className="border rounded p-2 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
