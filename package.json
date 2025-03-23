@@ -2,7 +2,7 @@
   "name": "progetto-resoconto",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://tiziano900.github.io/progetto-chiusura",
+  "homepage": ".",
   "dependencies": {
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",

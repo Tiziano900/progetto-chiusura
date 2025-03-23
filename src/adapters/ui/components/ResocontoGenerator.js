@@ -119,7 +119,10 @@ const ResocontoGenerator = ({ resocontoService }) => {
       <input
         type="text"
         value={value}
-        onChange={(e) => handleChange(field, e.target.value)}
+        onChange={(e) => {
+          e.preventDefault();
+          handleChange(field, e.target.value);
+        }}
         className="border rounded p-2 w-24"
         key={`input-${field}`}
       />
@@ -138,13 +141,20 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.matricola}
-              onChange={(e) => handleChange('matricola', e.target.value, index)}
+              onChange={(e) => {
+                e.preventDefault();
+                handleChange('matricola', e.target.value, index);
+              }}
               className="border rounded p-2 w-24"
             />
           </div>
           {!isFirstOrSecond && (
             <button
-              onClick={() => rimuoviAgente(index)}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                rimuoviAgente(index);
+              }}
               className="text-red-500 hover:text-red-700"
               title="Rimuovi agente"
             >
@@ -160,7 +170,10 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.radio}
-              onChange={(e) => handleChange('radio', e.target.value, index)}
+              onChange={(e) => {
+                e.preventDefault();
+                handleChange('radio', e.target.value, index);
+              }}
               className="border rounded p-2 w-24"
             />
           </div>
@@ -169,7 +182,10 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.palmare}
-              onChange={(e) => handleChange('palmare', e.target.value, index)}
+              onChange={(e) => {
+                e.preventDefault();
+                handleChange('palmare', e.target.value, index);
+              }}
               className="border rounded p-2 w-24"
             />
           </div>
@@ -178,7 +194,10 @@ const ResocontoGenerator = ({ resocontoService }) => {
             <input
               type="text"
               value={agente.bodycam}
-              onChange={(e) => handleChange('bodycam', e.target.value, index)}
+              onChange={(e) => {
+                e.preventDefault();
+                handleChange('bodycam', e.target.value, index);
+              }}
               className="border rounded p-2 w-24"
             />
           </div>
@@ -188,7 +207,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
+    <form onSubmit={(e) => e.preventDefault()} className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md">
       {notification && (
         <div className={`px-4 py-2 rounded mb-4 ${
           notification.includes("massimo") || notification.includes("primi due")
@@ -264,7 +283,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
           Aggiungi Agente {values.agenti.length >= MAX_AGENTI ? `(Max ${MAX_AGENTI})` : ""}
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 
