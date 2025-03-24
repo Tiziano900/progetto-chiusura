@@ -25,6 +25,7 @@ const ResocontoGenerator = ({ resocontoService }) => {
   const [notification, setNotification] = useState("");
   const [resocontoText, setResocontoText] = useState("");
   const formRef = useRef(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   // Carica i dati dal resoconto più recente se disponibile
   useEffect(() => {
@@ -213,6 +214,17 @@ const ResocontoGenerator = ({ resocontoService }) => {
     );
   });
 
+  const resetForm = useCallback(() => {
+    if (formRef.current) {
+      setValues(defaultValues);
+      setResocontoText("");
+      formRef.current.reset();
+      setShowResetConfirm(false);
+      setNotification("Campi resettati con successo!");
+      setTimeout(() => setNotification(""), 2000);
+    }
+  }, []);
+
   return (
     <form ref={formRef} className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md" onSubmit={(e) => e.preventDefault()}>
       {notification && (
@@ -244,8 +256,43 @@ const ResocontoGenerator = ({ resocontoService }) => {
           >
             NewTouch
           </a>
+          <button
+            type="button"
+            onClick={() => setShowResetConfirm(true)}
+            className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+            title="Svuota campi"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
       </div>
+
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Conferma Reset</h3>
+            <p className="text-gray-600 mb-6">Sei sicuro di voler svuotare tutti i campi? Questa azione non può essere annullata.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Conferma Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="border p-4 rounded-lg lg:col-span-4">
@@ -253,17 +300,17 @@ const ResocontoGenerator = ({ resocontoService }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <InputField label="PERSONE" field="persone" defaultValue={values.persone} />
             <InputField label="VEICOLI" field="veicoli" defaultValue={values.veicoli} />
-            <InputField label="SANZIONI_CDS" field="sanzioniCds" defaultValue={values.sanzioniCds} />
-            <InputField label="EXTRA_CDS" field="extraCds" defaultValue={values.extraCds} />
+            <InputField label="SANZIONI CDS" field="sanzioniCds" defaultValue={values.sanzioniCds} />
+            <InputField label="EXTRA CDS" field="extraCds" defaultValue={values.extraCds} />
           </div>
         </div>
 
         <div className="border p-4 rounded-lg lg:col-span-4">
           <h3 className="font-bold mb-3">Dati Veicolo</h3>
           <div className="flex flex-wrap gap-2">
-            <InputField label="VEICOLO ID" field="veicoloId" defaultValue={values.veicoloId} />
-            <InputField label="KM_INIZIALI" field="kmIniziali" defaultValue={values.kmIniziali} />
-            <InputField label="KM_FINALI" field="kmFinali" defaultValue={values.kmFinali} />
+            <InputField label="VEICOLO" field="veicoloId" defaultValue={values.veicoloId} />
+            <InputField label="KM INIZIALI" field="kmIniziali" defaultValue={values.kmIniziali} />
+            <InputField label="KM FINALI" field="kmFinali" defaultValue={values.kmFinali} />
           </div>
           {kmPercorsi > 0 && (
             <div className="mt-3 bg-blue-50 p-2 rounded">

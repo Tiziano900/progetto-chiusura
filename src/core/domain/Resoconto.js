@@ -26,7 +26,7 @@ class Resoconto {
 
   formattaResoconto() {
     const datiGenerali = `[RESOCONTO]: PERSONE_${this.persone} - VEICOLI_${this.veicoli} - SANZIONI_CDS_${this.sanzioniCds} - EXTRA_CDS_${this.extraCds}`;
-    const datiVeicolo = `[VEICOLO_${this.veicoloId}]: KM_INIZIALI_${this.kmIniziali} - KM_FINALI_${this.kmFinali}`;
+    const datiVeicolo = `[VEICOLO_${this.veicoloId}]: KM INIZIALI_${this.kmIniziali} - KM_FINALI_${this.kmFinali}`;
     
     const formattaAgente = (agente) => {
       if (!agente || !agente.matricola) return '';
