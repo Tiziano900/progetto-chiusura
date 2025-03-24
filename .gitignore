@@ -1,21 +1,57 @@
-# dependencies
+# Dipendenze
 /node_modules
 /.pnp
 .pnp.js
 
-# testing
+# Testing
 /coverage
 
-# production
+# Produzione
 /build
+/dist
 
-# misc
-.DS_Store
+# File ambiente
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
+.firebaserc
 
+# Log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log* 
+yarn-error.log*
+firebase-debug.log*
+ui-debug.log*
+
+# Firebase
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Cache e file temporanei
+.eslintcache
+.cache/
+*.log
+*.tsbuildinfo
+.yarn-integrity
+
+# File specifici dell'OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db 
