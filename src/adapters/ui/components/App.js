@@ -1,28 +1,30 @@
-import React from 'react';
-import ResocontoGenerator from './ResocontoGenerator';
+import React, { useMemo } from 'react';
 import ResocontoService from '../../../application/ResocontoService';
-import LocalStorageResocontoRepository from '../../repositories/LocalStorageResocontoRepository';
-
-// Inizializzazione delle dipendenze (wiring)
-const repository = new LocalStorageResocontoRepository();
-const service = new ResocontoService(repository);
+import FirestoreResocontoRepository from '../../repositories/FirestoreResocontoRepository';
+import PattuglieFSRepository from '../../repositories/PattuglieFSRepository';
+import ChiusuraGenerator from './ChiusuraGenerator';
 
 function App() {
+  // Inizializza le dipendenze una sola volta usando useMemo
+  const chiusuraService = useMemo(() => {
+    const resocontoRepository = new FirestoreResocontoRepository();
+    const pattuglieRepository = new PattuglieFSRepository();
+    return new ResocontoService(resocontoRepository, pattuglieRepository);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-blue-600 text-white p-4 shadow-md">
+    <div className="min-h-screen bg-gray-100">
+      <nav className="bg-blue-600 text-white p-4">
         <div className="container mx-auto">
-          <h1 className="text-xl font-bold">GENERATORE CHIUSURE</h1>
+          <h1 className="text-2xl font-bold">Generatore di Chiusure</h1>
         </div>
       </nav>
-
-      <main className="container mx-auto py-8 px-4">
-        <ResocontoGenerator resocontoService={service} />
+      <main className="container mx-auto p-4">
+        <ChiusuraGenerator chiusuraService={chiusuraService} />
       </main>
-
-      <footer className="mt-12 py-6 bg-gray-100 border-t">
-        <div className="container mx-auto px-4 text-center text-gray-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} Generatore Chiusure</p>
+      <footer className="bg-gray-800 text-white p-4 mt-8">
+        <div className="container mx-auto text-center">
+          <p>©2025 Novecento</p>
         </div>
       </footer>
     </div>
